@@ -18,12 +18,19 @@ const init = async () => {
   await connectDB();
   await ensureDefaultAdmin();
 
+  // With credentials enabled, the CORS spec forbids a wildcard origin, so we
+  // reflect an explicit allow-list. Set CORS_ORIGINS in .env (comma-separated).
+  const allowedOrigins = (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   const server = Hapi.server({
     port: process.env.PORT || 3000,
     host: "0.0.0.0",
     routes: {
       cors: {
-        origin: ["*"],
+        origin: allowedOrigins.length ? allowedOrigins : ["*"],
         headers: ["Accept", "Authorization", "Content-Type", "If-None-Match"],
         additionalHeaders: ["X-Requested-With"],
         credentials: true,
